@@ -1,0 +1,133 @@
+<script lang="ts">
+import { defineComponent, defineAsyncComponent, type PropType } from 'vue'
+import type { WidgetConfig, WidgetType } from './types'
+import BaseWidget from './BaseWidget.vue'
+import WidgetMenu from '@/components/ui/WidgetMenu.vue'
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
+import ClockEditDialog from './dialogs/ClockEditDialog.vue'
+import RssEditDialog from './dialogs/RssEditDialog.vue'
+import WeatherEditDialog from './dialogs/WeatherEditDialog.vue'
+
+const widgetComponents: Record<WidgetType, ReturnType<typeof defineAsyncComponent>> = {
+  rss: defineAsyncComponent(() => import('./RssWidget.vue')),
+  weather: defineAsyncComponent(() => import('./WeatherWidget.vue')),
+  clock: defineAsyncComponent(() => import('./ClockWidget.vue')),
+  notes: defineAsyncComponent(() => import('./NotesWidget.vue')),
+  bookmarks: defineAsyncComponent(() => import('./BookmarksWidget.vue'))
+}
+
+const editableWidgets: WidgetType[] = ['clock', 'rss', 'weather']
+
+export default defineComponent({
+  name: 'WidgetFactory',
+
+  components: {
+    BaseWidget,
+    WidgetMenu,
+    ConfirmDialog,
+    ClockEditDialog,
+    RssEditDialog,
+    WeatherEditDialog
+  },
+
+  props: {
+    config: {
+      type: Object as PropType<WidgetConfig>,
+      required: true
+    }
+  },
+
+  emits: ['remove', 'update:config'],
+
+  data () {
+    return {
+      showEditDialog: false,
+      showDeleteConfirm: false
+    }
+  },
+
+  computed: {
+    widgetComponent () {
+      return widgetComponents[this.config.type]
+    },
+
+    hasEditDialog (): boolean {
+      return editableWidgets.includes(this.config.type)
+    },
+
+    menuItems () {
+      const items = []
+
+      if (this.hasEditDialog) {
+        items.push({ label: 'Edit', action: 'edit' })
+      }
+
+      items.push({ label: 'Remove', action: 'remove', danger: true })
+
+      return items
+    }
+  },
+
+  methods: {
+    handleMenuSelect (action: string) {
+      if (action === 'edit') {
+        this.showEditDialog = true
+      } else if (action === 'remove') {
+        this.showDeleteConfirm = true
+      }
+    },
+
+    handleEditSave (updatedConfig: WidgetConfig) {
+      this.$emit('update:config', updatedConfig)
+    },
+
+    handleDeleteConfirm () {
+      this.$emit('remove')
+    }
+  }
+})
+</script>
+
+<template>
+  <BaseWidget :config="config">
+    <template #menu>
+      <WidgetMenu :items="menuItems" @select="handleMenuSelect" />
+    </template>
+
+    <component
+      :is="widgetComponent"
+      :config="config"
+      @update:config="$emit('update:config', $event)"
+    />
+  </BaseWidget>
+
+  <ClockEditDialog
+    v-if="config.type === 'clock'"
+    v-model:open="showEditDialog"
+    :config="config"
+    @save="handleEditSave"
+  />
+
+  <RssEditDialog
+    v-if="config.type === 'rss'"
+    v-model:open="showEditDialog"
+    :config="config"
+    @save="handleEditSave"
+  />
+
+  <WeatherEditDialog
+    v-if="config.type === 'weather'"
+    v-model:open="showEditDialog"
+    :config="config"
+    @save="handleEditSave"
+  />
+
+  <ConfirmDialog
+    v-model:open="showDeleteConfirm"
+    title="Remove Widget"
+    message="Are you sure you want to remove this widget?"
+    confirm-text="Remove"
+    :danger="true"
+    @confirm="handleDeleteConfirm"
+  />
+</template>

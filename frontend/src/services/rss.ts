@@ -1,0 +1,106 @@
+export interface RssFeedItem {
+  title: string
+  link: string
+  description: string
+  pubDate: string
+}
+
+export interface RssFeedData {
+  title: string
+  description: string
+  link: string
+  items: RssFeedItem[]
+  lastFetched: number
+}
+
+const CORS_PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?',
+  'https://api.codetabs.com/v1/proxy?quest='
+]
+
+async function fetchWithProxy (url: string, proxyIndex = 0): Promise<string> {
+  if (proxyIndex >= CORS_PROXIES.length) {
+    throw new Error('All CORS proxies failed')
+  }
+
+  const proxyUrl = CORS_PROXIES[proxyIndex] + encodeURIComponent(url)
+
+  try {
+    const response = await fetch(proxyUrl, {
+      headers: { Accept: 'application/rss+xml, application/xml, text/xml' }
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+
+    return await response.text()
+  } catch {
+    console.warn(`Proxy ${proxyIndex} failed, trying next...`)
+    return fetchWithProxy(url, proxyIndex + 1)
+  }
+}
+
+export async function fetchRssFeed (feedUrl: string): Promise<RssFeedData> {
+  const xmlText = await fetchWithProxy(feedUrl)
+  return parseRssFeed(xmlText)
+}
+
+function parseRssFeed (xmlText: string): RssFeedData {
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(xmlText, 'text/xml')
+
+  const parseError = doc.querySelector('parsererror')
+  if (parseError) {
+    throw new Error('Invalid RSS feed format')
+  }
+
+  const isAtom = doc.querySelector('feed') !== null
+
+  if (isAtom) {
+    return parseAtomFeed(doc)
+  }
+
+  return parseRss2Feed(doc)
+}
+
+function parseRss2Feed (doc: Document): RssFeedData {
+  const channel = doc.querySelector('channel')
+  if (!channel) throw new Error('Invalid RSS feed: no channel element')
+
+  const items = Array.from(channel.querySelectorAll('item')).map((item) => ({
+    title: item.querySelector('title')?.textContent ?? '',
+    link: item.querySelector('link')?.textContent ?? '',
+    description: item.querySelector('description')?.textContent ?? '',
+    pubDate: item.querySelector('pubDate')?.textContent ?? ''
+  }))
+
+  return {
+    title: channel.querySelector('title')?.textContent ?? '',
+    description: channel.querySelector('description')?.textContent ?? '',
+    link: channel.querySelector('link')?.textContent ?? '',
+    items,
+    lastFetched: Date.now()
+  }
+}
+
+function parseAtomFeed (doc: Document): RssFeedData {
+  const feed = doc.querySelector('feed')
+  if (!feed) throw new Error('Invalid Atom feed')
+
+  const items = Array.from(feed.querySelectorAll('entry')).map((entry) => ({
+    title: entry.querySelector('title')?.textContent ?? '',
+    link: entry.querySelector('link')?.getAttribute('href') ?? '',
+    description: entry.querySelector('summary')?.textContent ?? '',
+    pubDate: entry.querySelector('updated')?.textContent ?? ''
+  }))
+
+  return {
+    title: feed.querySelector('title')?.textContent ?? '',
+    description: feed.querySelector('subtitle')?.textContent ?? '',
+    link: feed.querySelector('link')?.getAttribute('href') ?? '',
+    items,
+    lastFetched: Date.now()
+  }
+}
