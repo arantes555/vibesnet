@@ -64,9 +64,9 @@ export interface DashboardWidget {
 }
 
 export const WIDGET_DEFAULTS: Record<WidgetType, { w: number, h: number }> = {
-  clock: { w: 2, h: 2 },
-  notes: { w: 2, h: 3 },
-  bookmarks: { w: 2, h: 3 },
-  rss: { w: 3, h: 4 },
-  weather: { w: 2, h: 2 }
+  clock: { w: 1, h: 2 },
+  notes: { w: 1, h: 3 },
+  bookmarks: { w: 1, h: 3 },
+  rss: { w: 1, h: 4 },
+  weather: { w: 1, h: 2 }
 }

@@ -76,6 +76,10 @@ npm run lint       # Lint and fix code
 npm run type-check # TypeScript check
 ```
 
+## Git Commits
+- Do NOT include `Co-Authored-By` lines in commit messages
+- The user is the sole author of all commits
+
 ## Widget Types
 - Clock (configurable: timezone, format, seconds)
 - Notes (inline editing)

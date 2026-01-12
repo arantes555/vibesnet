@@ -26,6 +26,59 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   })
 
+  function hasValidPosition (pos: WidgetPosition): boolean {
+    return Number.isFinite(pos.x) && Number.isFinite(pos.y) &&
+           pos.x !== null && pos.y !== null &&
+           pos.x >= 0 && pos.y >= 0
+  }
+
+  function markOccupied (occupied: boolean[][], pos: WidgetPosition) {
+    for (let dy = 0; dy < pos.h; dy++) {
+      if (!occupied[pos.y + dy]) occupied[pos.y + dy] = []
+      for (let dx = 0; dx < pos.w; dx++) {
+        occupied[pos.y + dy][pos.x + dx] = true
+      }
+    }
+  }
+
+  function findFreePosition (occupied: boolean[][], w: number, h: number, colNum: number): { x: number, y: number } {
+    for (let y = 0; ; y++) {
+      for (let x = 0; x <= colNum - w; x++) {
+        let canPlace = true
+        for (let dy = 0; dy < h && canPlace; dy++) {
+          for (let dx = 0; dx < w && canPlace; dx++) {
+            if (occupied[y + dy]?.[x + dx]) {
+              canPlace = false
+            }
+          }
+        }
+        if (canPlace) {
+          return { x, y }
+        }
+      }
+    }
+  }
+
+  function normalizeLayout () {
+    const colNum = 3
+    const occupied: boolean[][] = []
+
+    const validWidgets = widgets.value.filter(w => hasValidPosition(w.position))
+    const invalidWidgets = widgets.value.filter(w => !hasValidPosition(w.position))
+
+    validWidgets
+      .sort((a, b) => a.position.y !== b.position.y ? a.position.y - b.position.y : a.position.x - b.position.x)
+      .forEach(widget => markOccupied(occupied, widget.position))
+
+    invalidWidgets.forEach((widget) => {
+      const pos = widget.position
+      const free = findFreePosition(occupied, pos.w, pos.h, colNum)
+      pos.x = free.x
+      pos.y = free.y
+      markOccupied(occupied, pos)
+    })
+  }
+
   function getWidgetById (id: string) {
     return widgets.value.find((w) => w.config.id === id)
   }
@@ -33,8 +86,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
   function addWidget (config: WidgetConfig, position?: Partial<WidgetPosition>) {
     const defaults = WIDGET_DEFAULTS[config.type]
     const newPosition: WidgetPosition = {
-      x: 0,
-      y: Infinity,
+      x: -1,
+      y: -1,
       w: defaults.w,
       h: defaults.h,
       i: config.id,
@@ -45,6 +98,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
       config,
       position: newPosition
     })
+    normalizeLayout()
   }
 
   function removeWidget (id: string) {
@@ -74,6 +128,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     const saved = loadFromStorage<DashboardWidget[]>(STORAGE_KEY)
     if (saved && saved.length > 0) {
       widgets.value = saved
+      normalizeLayout()
     } else {
       initializeDefaultDashboard()
     }

@@ -1,6 +1,7 @@
 <script lang="ts">
 import { defineComponent, defineAsyncComponent, type PropType } from 'vue'
 import type { WidgetConfig, WidgetType } from './types'
+import { useDashboardStore } from '@/stores/dashboard'
 import BaseWidget from './BaseWidget.vue'
 import WidgetMenu from '@/components/ui/WidgetMenu.vue'
 import ConfirmDialog from '@/components/ui/ConfirmDialog.vue'
@@ -38,6 +39,11 @@ export default defineComponent({
   },
 
   emits: ['remove', 'update:config'],
+
+  setup () {
+    const store = useDashboardStore()
+    return { store }
+  },
 
   data () {
     return {
@@ -89,7 +95,7 @@ export default defineComponent({
 </script>
 
 <template>
-  <BaseWidget :config="config">
+  <BaseWidget :config="config" :draggable="store.isEditMode">
     <template #menu>
       <WidgetMenu :items="menuItems" @select="handleMenuSelect" />
     </template>

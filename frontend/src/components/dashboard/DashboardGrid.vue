@@ -36,13 +36,16 @@ export default defineComponent({
     <GridLayout
       v-if="store.isLoaded"
       v-model:layout="store.layoutItems"
-      :col-num="12"
+      :col-num="3"
       :row-height="80"
       :is-draggable="store.isEditMode"
       :is-resizable="false"
       :vertical-compact="true"
       :prevent-collision="true"
       :use-css-transforms="true"
+      :responsive="true"
+      :breakpoints="{ lg: 768, sm: 0 }"
+      :cols="{ lg: 3, sm: 1 }"
       @layout-updated="onLayoutUpdate"
     >
       <GridItem

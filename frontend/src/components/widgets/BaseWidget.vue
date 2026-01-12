@@ -9,6 +9,10 @@ export default defineComponent({
     config: {
       type: Object as PropType<WidgetConfig>,
       required: true
+    },
+    draggable: {
+      type: Boolean,
+      default: false
     }
   }
 })
@@ -16,7 +20,7 @@ export default defineComponent({
 
 <template>
   <div class="widget">
-    <header class="widget-header">
+    <header class="widget-header" :class="{ 'widget-header--draggable': draggable }">
       <h3 class="widget-title">{{ config.title }}</h3>
       <div class="widget-actions">
         <slot name="menu" />
@@ -46,6 +50,9 @@ export default defineComponent({
   padding: 0.5rem 0.75rem;
   background: var(--color-background-mute);
   border-bottom: 1px solid var(--color-border);
+}
+
+.widget-header--draggable {
   cursor: move;
 }
 

@@ -19,6 +19,18 @@ const CORS_PROXIES = [
   'https://api.codetabs.com/v1/proxy?quest='
 ]
 
+async function fetchDirect (url: string): Promise<string> {
+  const response = await fetch(url, {
+    headers: { Accept: 'application/rss+xml, application/xml, text/xml' }
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`)
+  }
+
+  return await response.text()
+}
+
 async function fetchWithProxy (url: string, proxyIndex = 0): Promise<string> {
   if (proxyIndex >= CORS_PROXIES.length) {
     throw new Error('All CORS proxies failed')
@@ -43,8 +55,14 @@ async function fetchWithProxy (url: string, proxyIndex = 0): Promise<string> {
 }
 
 export async function fetchRssFeed (feedUrl: string): Promise<RssFeedData> {
-  const xmlText = await fetchWithProxy(feedUrl)
-  return parseRssFeed(xmlText)
+  try {
+    const xmlText = await fetchDirect(feedUrl)
+    return parseRssFeed(xmlText)
+  } catch {
+    console.warn('Direct fetch failed, trying proxies...')
+    const xmlText = await fetchWithProxy(feedUrl)
+    return parseRssFeed(xmlText)
+  }
 }
 
 function parseRssFeed (xmlText: string): RssFeedData {
