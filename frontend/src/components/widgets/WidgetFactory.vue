@@ -116,18 +116,15 @@ export default defineComponent({
         <span class="unread-badge">{{ unreadCount }}</span>
       </button>
       <button
-        v-if="config.type === 'rss' && !childLoading"
+        v-if="config.type === 'rss'"
         class="header-btn"
-        title="Refresh"
+        :title="childLoading ? 'Loading...' : 'Refresh'"
+        :disabled="childLoading"
         @click="refreshChild"
       >
-        &#8635;
+        <span v-if="childLoading" class="header-spinner" />
+        <template v-else>&#8635;</template>
       </button>
-      <span
-        v-else-if="config.type === 'rss' && childLoading"
-        class="header-spinner"
-        title="Loading..."
-      />
     </template>
 
     <template #menu>

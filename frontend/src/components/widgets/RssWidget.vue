@@ -178,10 +178,15 @@ export default defineComponent({
       Loading...
     </div>
 
-    <ul v-else-if="displayedItems.length" class="rss-list">
+    <TransitionGroup
+      v-else-if="displayedItems.length"
+      tag="ul"
+      name="rss-item-enter"
+      class="rss-list"
+    >
       <li
-        v-for="(item, index) in displayedItems"
-        :key="index"
+        v-for="item in displayedItems"
+        :key="item.link"
         class="rss-item"
         :class="{ 'rss-item--read': isRead(item.link) }"
       >
@@ -200,7 +205,7 @@ export default defineComponent({
           </div>
         </a>
       </li>
-    </ul>
+    </TransitionGroup>
 
     <div v-else class="rss-empty">
       No feed URL configured
@@ -285,5 +290,15 @@ export default defineComponent({
   color: var(--color-text);
   opacity: 0.6;
   margin-top: 0.125rem;
+}
+
+.rss-item-enter-move,
+.rss-item-enter-enter-active {
+  transition: all 0.3s ease;
+}
+
+.rss-item-enter-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>
