@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import type { DashboardWidget, WidgetConfig, WidgetPosition } from '@/components/widgets/types'
 import { WIDGET_DEFAULTS } from '@/components/widgets/types'
 import { loadFromStorage, saveToStorage } from '@/utils/storage'
@@ -8,23 +8,27 @@ const STORAGE_KEY = 'dashboard'
 
 export const useDashboardStore = defineStore('dashboard', () => {
   const widgets = ref<DashboardWidget[]>([])
-  const isEditMode = ref(false)
+  const layoutItems = ref<WidgetPosition[]>([])
   const isLoaded = ref(false)
 
-  const layoutItems = computed({
-    get: () => widgets.value.map((w) => ({
+  function syncLayoutToWidgets () {
+    layoutItems.value.forEach((pos) => {
+      const widget = widgets.value.find((w) => w.config.id === pos.i)
+      if (widget) {
+        widget.position.x = pos.x
+        widget.position.y = pos.y
+        widget.position.w = pos.w
+        widget.position.h = pos.h
+      }
+    })
+  }
+
+  function syncWidgetsToLayout () {
+    layoutItems.value = widgets.value.map((w) => ({
       ...w.position,
       i: w.config.id
-    })),
-    set: (newLayout: WidgetPosition[]) => {
-      newLayout.forEach((pos) => {
-        const widget = widgets.value.find((w) => w.config.id === pos.i)
-        if (widget) {
-          widget.position = { ...pos }
-        }
-      })
-    }
-  })
+    }))
+  }
 
   function hasValidPosition (pos: WidgetPosition): boolean {
     return Number.isFinite(pos.x) && Number.isFinite(pos.y) &&
@@ -34,9 +38,9 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   function markOccupied (occupied: boolean[][], pos: WidgetPosition) {
     for (let dy = 0; dy < pos.h; dy++) {
-      if (!occupied[pos.y + dy]) occupied[pos.y + dy] = []
+      const row = occupied[pos.y + dy] ?? (occupied[pos.y + dy] = [])
       for (let dx = 0; dx < pos.w; dx++) {
-        occupied[pos.y + dy][pos.x + dx] = true
+        row[pos.x + dx] = true
       }
     }
   }
@@ -99,12 +103,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
       position: newPosition
     })
     normalizeLayout()
+    syncWidgetsToLayout()
   }
 
   function removeWidget (id: string) {
     const index = widgets.value.findIndex((w) => w.config.id === id)
     if (index !== -1) {
       widgets.value.splice(index, 1)
+      syncWidgetsToLayout()
     }
   }
 
@@ -115,13 +121,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   }
 
-  function updateLayout (newLayout: WidgetPosition[]) {
-    newLayout.forEach((pos) => {
-      const widget = widgets.value.find((w) => w.config.id === pos.i)
-      if (widget) {
-        widget.position = { ...pos }
-      }
-    })
+  function updateLayout () {
+    syncLayoutToWidgets()
   }
 
   function loadDashboard () {
@@ -132,6 +133,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     } else {
       initializeDefaultDashboard()
     }
+    syncWidgetsToLayout()
     isLoaded.value = true
   }
 
@@ -150,15 +152,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
     })
   }
 
-  function toggleEditMode () {
-    isEditMode.value = !isEditMode.value
-  }
-
   watch(widgets, saveDashboard, { deep: true })
 
   return {
     widgets,
-    isEditMode,
     isLoaded,
     layoutItems,
     getWidgetById,
@@ -167,7 +164,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     setWidgetConfig,
     updateLayout,
     loadDashboard,
-    saveDashboard,
-    toggleEditMode
+    saveDashboard
   }
 })

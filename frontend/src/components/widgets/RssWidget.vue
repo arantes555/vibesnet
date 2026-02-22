@@ -105,9 +105,19 @@ export default defineComponent({
         class="rss-item"
       >
         <a :href="item.link" target="_blank" rel="noopener" class="rss-link">
-          {{ item.title }}
+          <img
+            v-if="item.image"
+            :src="item.image"
+            alt=""
+            class="rss-image"
+            loading="lazy"
+            @error="($event.target as HTMLImageElement).style.display = 'none'"
+          >
+          <div class="rss-content">
+            <span class="rss-title">{{ item.title }}</span>
+            <span v-if="item.pubDate" class="rss-date">{{ formatDate(item.pubDate) }}</span>
+          </div>
         </a>
-        <span v-if="item.pubDate" class="rss-date">{{ formatDate(item.pubDate) }}</span>
       </li>
     </ul>
 
@@ -155,7 +165,8 @@ export default defineComponent({
 }
 
 .rss-link {
-  display: block;
+  display: flex;
+  gap: 0.5rem;
   color: var(--color-text);
   text-decoration: none;
   font-size: 0.875rem;
@@ -164,6 +175,23 @@ export default defineComponent({
 
 .rss-link:hover {
   color: var(--color-heading);
+}
+
+.rss-image {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.rss-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.rss-title {
+  display: block;
 }
 
 .rss-date {

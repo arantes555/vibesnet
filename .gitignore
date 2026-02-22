@@ -5,3 +5,7 @@ dist/
 *.local
 *.log
 .idea/
+frontend/e2e/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+test-results/

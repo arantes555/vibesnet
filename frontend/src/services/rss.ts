@@ -3,6 +3,7 @@ export interface RssFeedItem {
   link: string
   description: string
   pubDate: string
+  image?: string
 }
 
 export interface RssFeedData {
@@ -83,16 +84,43 @@ function parseRssFeed (xmlText: string): RssFeedData {
   return parseRss2Feed(doc)
 }
 
+function extractImage (item: Element, description: string): string | undefined {
+  // Try media:content or media:thumbnail (namespace-aware)
+  const mediaContent = item.getElementsByTagName('media:content')[0] ||
+                       item.getElementsByTagName('media:thumbnail')[0]
+  if (mediaContent) {
+    const url = mediaContent.getAttribute('url')
+    if (url) return url
+  }
+
+  // Try enclosure with image type
+  const enclosure = item.querySelector('enclosure[type^="image"]')
+  if (enclosure) {
+    const url = enclosure.getAttribute('url')
+    if (url) return url
+  }
+
+  // Try to find image in description/content HTML
+  const imgMatch = description.match(/<img[^>]+src=["']([^"']+)["']/)
+  if (imgMatch) return imgMatch[1]
+
+  return undefined
+}
+
 function parseRss2Feed (doc: Document): RssFeedData {
   const channel = doc.querySelector('channel')
   if (!channel) throw new Error('Invalid RSS feed: no channel element')
 
-  const items = Array.from(channel.querySelectorAll('item')).map((item) => ({
-    title: item.querySelector('title')?.textContent ?? '',
-    link: item.querySelector('link')?.textContent ?? '',
-    description: item.querySelector('description')?.textContent ?? '',
-    pubDate: item.querySelector('pubDate')?.textContent ?? ''
-  }))
+  const items = Array.from(channel.querySelectorAll('item')).map((item) => {
+    const description = item.querySelector('description')?.textContent ?? ''
+    return {
+      title: item.querySelector('title')?.textContent ?? '',
+      link: item.querySelector('link')?.textContent ?? '',
+      description,
+      pubDate: item.querySelector('pubDate')?.textContent ?? '',
+      image: extractImage(item, description)
+    }
+  })
 
   return {
     title: channel.querySelector('title')?.textContent ?? '',
@@ -107,12 +135,17 @@ function parseAtomFeed (doc: Document): RssFeedData {
   const feed = doc.querySelector('feed')
   if (!feed) throw new Error('Invalid Atom feed')
 
-  const items = Array.from(feed.querySelectorAll('entry')).map((entry) => ({
-    title: entry.querySelector('title')?.textContent ?? '',
-    link: entry.querySelector('link')?.getAttribute('href') ?? '',
-    description: entry.querySelector('summary')?.textContent ?? '',
-    pubDate: entry.querySelector('updated')?.textContent ?? ''
-  }))
+  const items = Array.from(feed.querySelectorAll('entry')).map((entry) => {
+    const description = entry.querySelector('summary')?.textContent ??
+                        entry.querySelector('content')?.textContent ?? ''
+    return {
+      title: entry.querySelector('title')?.textContent ?? '',
+      link: entry.querySelector('link')?.getAttribute('href') ?? '',
+      description,
+      pubDate: entry.querySelector('updated')?.textContent ?? '',
+      image: extractImage(entry, description)
+    }
+  })
 
   return {
     title: feed.querySelector('title')?.textContent ?? '',

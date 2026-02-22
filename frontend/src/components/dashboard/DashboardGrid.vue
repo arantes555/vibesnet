@@ -3,8 +3,6 @@ import { defineComponent } from 'vue'
 import { GridLayout, GridItem } from 'grid-layout-plus'
 import { useDashboardStore } from '@/stores/dashboard'
 import WidgetFactory from '@/components/widgets/WidgetFactory.vue'
-import type { WidgetPosition } from '@/components/widgets/types'
-
 export default defineComponent({
   name: 'DashboardGrid',
 
@@ -24,8 +22,8 @@ export default defineComponent({
   },
 
   methods: {
-    onLayoutUpdate (newLayout: WidgetPosition[]) {
-      this.store.updateLayout(newLayout)
+    onLayoutUpdate () {
+      this.store.updateLayout()
     }
   }
 })
@@ -38,14 +36,13 @@ export default defineComponent({
       v-model:layout="store.layoutItems"
       :col-num="3"
       :row-height="80"
-      :is-draggable="store.isEditMode"
+      :is-draggable="true"
       :is-resizable="false"
       :vertical-compact="true"
-      :prevent-collision="true"
       :use-css-transforms="true"
       :responsive="true"
-      :breakpoints="{ lg: 768, sm: 0 }"
-      :cols="{ lg: 3, sm: 1 }"
+      :breakpoints="{ lg: 768, md: 768, sm: 0, xs: 0, xxs: 0 }"
+      :cols="{ lg: 3, md: 3, sm: 1, xs: 1, xxs: 1 }"
       @layout-updated="onLayoutUpdate"
     >
       <GridItem
@@ -56,6 +53,7 @@ export default defineComponent({
         :w="widget.position.w"
         :h="widget.position.h"
         :i="widget.config.id"
+        drag-allow-from=".widget-header"
       >
         <WidgetFactory
           :config="widget.config"
@@ -71,5 +69,10 @@ export default defineComponent({
 .dashboard {
   padding: 1rem;
   min-height: calc(100vh - 4rem);
+}
+
+.dashboard :deep(.vgl-layout) {
+  --vgl-placeholder-bg: var(--color-border);
+  --vgl-placeholder-opacity: 50%;
 }
 </style>

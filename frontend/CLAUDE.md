@@ -74,7 +74,14 @@ npm run dev        # Start dev server
 npm run build      # Build for production
 npm run lint       # Lint and fix code
 npm run type-check # TypeScript check
+npm run test:e2e   # Run Playwright E2E tests
 ```
+
+## E2E Testing
+
+- Tests are in `e2e/` using Playwright with Chromium
+- Screenshots are enabled by default (`screenshot: 'on'` in playwright.config.ts)
+- **After running E2E tests, always inspect the screenshots** in `e2e/test-results/` to visually verify the UI — don't just rely on assertions passing
 
 ## Git Commits
 - Do NOT include `Co-Authored-By` lines in commit messages

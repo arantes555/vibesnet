@@ -1,7 +1,6 @@
 <script lang="ts">
 import { defineComponent } from 'vue'
 import { RouterView } from 'vue-router'
-import { useDashboardStore } from '@/stores/dashboard'
 import AddWidgetDialog from '@/components/dashboard/AddWidgetDialog.vue'
 
 export default defineComponent({
@@ -10,11 +9,6 @@ export default defineComponent({
   components: {
     RouterView,
     AddWidgetDialog
-  },
-
-  setup () {
-    const store = useDashboardStore()
-    return { store }
   },
 
   data () {
@@ -31,9 +25,6 @@ export default defineComponent({
     <div class="app-actions">
       <button class="header-btn" @click="showAddWidget = true">
         + Add Widget
-      </button>
-      <button class="header-btn" :class="{ active: store.isEditMode }" @click="store.toggleEditMode">
-        {{ store.isEditMode ? 'Done' : 'Edit' }}
       </button>
     </div>
   </header>
@@ -77,11 +68,5 @@ export default defineComponent({
 
 .header-btn:hover {
   background: var(--color-background-mute);
-}
-
-.header-btn.active {
-  background: var(--color-heading);
-  color: var(--color-background);
-  border-color: var(--color-heading);
 }
 </style>
