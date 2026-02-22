@@ -302,7 +302,8 @@ export default defineComponent({
 
 .form-input:focus {
   outline: none;
-  border-color: var(--color-border-hover);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
 }
 
 .form-row {
@@ -321,15 +322,20 @@ export default defineComponent({
 .btn {
   padding: 0.5rem 1rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: 6px;
   font-size: 0.875rem;
   cursor: pointer;
 }
 
 .btn-primary {
-  background: var(--color-heading);
-  color: var(--color-background);
-  border-color: var(--color-heading);
+  background: var(--color-accent);
+  color: #ffffff;
+  border-color: var(--color-accent);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
 }
 
 .btn-secondary {

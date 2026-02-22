@@ -41,6 +41,7 @@ export default defineComponent({
   border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .widget-header {
@@ -50,6 +51,7 @@ export default defineComponent({
   padding: 0.5rem 0.75rem;
   background: var(--color-background-mute);
   border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
 }
 
 .widget-header--draggable {

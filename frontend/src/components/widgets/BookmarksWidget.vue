@@ -199,7 +199,8 @@ export default defineComponent({
 
 .bookmark-input:focus {
   outline: none;
-  border-color: var(--color-border-hover);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-accent-soft);
 }
 
 .bookmark-form-actions {
@@ -210,7 +211,7 @@ export default defineComponent({
 .btn {
   padding: 0.375rem 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--color-background-soft);
   color: var(--color-text);
   font-size: 0.75rem;

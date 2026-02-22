@@ -40,15 +40,15 @@ export default defineComponent({
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--color-background-soft);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--color-accent);
 }
 
 .app-title {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-heading);
+  color: #ffffff;
+  letter-spacing: -0.01em;
 }
 
 .app-actions {
@@ -58,15 +58,16 @@ export default defineComponent({
 
 .header-btn {
   padding: 0.375rem 0.75rem;
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   font-size: 0.875rem;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
 .header-btn:hover {
-  background: var(--color-background-mute);
+  background: rgba(255, 255, 255, 0.22);
 }
 </style>
