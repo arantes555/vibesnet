@@ -99,8 +99,10 @@ export default defineComponent({
 }
 
 .theme-btn {
+  width: 2rem;
   font-size: 1rem;
   line-height: 1;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0;
+  text-align: center;
 }
 </style>
