@@ -55,15 +55,44 @@ async function fetchWithProxy (url: string, proxyIndex = 0): Promise<string> {
   }
 }
 
-export async function fetchRssFeed (feedUrl: string): Promise<RssFeedData> {
+export interface FetchResult {
+  data: RssFeedData
+  usedProxy: boolean
+}
+
+export async function fetchRssFeed (feedUrl: string, useProxy?: boolean): Promise<FetchResult> {
+  if (useProxy) {
+    const xmlText = await fetchWithProxy(feedUrl)
+    return { data: parseRssFeed(xmlText), usedProxy: true }
+  }
+
   try {
     const xmlText = await fetchDirect(feedUrl)
-    return parseRssFeed(xmlText)
+    return { data: parseRssFeed(xmlText), usedProxy: false }
   } catch {
     console.warn('Direct fetch failed, trying proxies...')
     const xmlText = await fetchWithProxy(feedUrl)
-    return parseRssFeed(xmlText)
+    return { data: parseRssFeed(xmlText), usedProxy: true }
   }
+}
+
+export function mergeItems (existing: RssFeedItem[], incoming: RssFeedItem[]): RssFeedItem[] {
+  const byLink = new Map<string, RssFeedItem>()
+
+  for (const item of existing) {
+    if (item.link) byLink.set(item.link, item)
+  }
+
+  for (const item of incoming) {
+    if (item.link) byLink.set(item.link, item)
+  }
+
+  return Array.from(byLink.values())
+    .sort((a, b) => {
+      const da = a.pubDate ? new Date(a.pubDate).getTime() : 0
+      const db = b.pubDate ? new Date(b.pubDate).getTime() : 0
+      return db - da
+    })
 }
 
 function parseRssFeed (xmlText: string): RssFeedData {

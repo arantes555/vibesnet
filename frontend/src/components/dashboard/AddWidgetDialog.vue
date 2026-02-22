@@ -89,8 +89,7 @@ export default defineComponent({
             type: 'rss',
             title: 'RSS Feed',
             feedUrl: this.rssUrl,
-            refreshInterval: 15,
-            maxItems: 10
+            refreshInterval: 15
           }
           break
         case 'weather':

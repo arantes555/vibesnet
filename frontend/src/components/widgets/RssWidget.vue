@@ -1,7 +1,10 @@
 <script lang="ts">
 import { defineComponent, type PropType } from 'vue'
 import type { RssWidgetConfig } from './types'
-import { fetchRssFeed, type RssFeedData } from '@/services/rss'
+import { fetchRssFeed, mergeItems, type RssFeedData } from '@/services/rss'
+
+const ITEM_HEIGHT_ESTIMATE = 50
+const BATCH_SIZE = 20
 
 export default defineComponent({
   name: 'RssWidget',
@@ -13,18 +16,29 @@ export default defineComponent({
     }
   },
 
+  emits: ['update:config', 'update:loading'],
+
   data () {
     return {
       feed: null as RssFeedData | null,
       loading: false,
       error: null as string | null,
-      refreshInterval: undefined as number | undefined
+      refreshInterval: undefined as number | undefined,
+      displayCount: BATCH_SIZE
     }
   },
 
   computed: {
+    allItems () {
+      return this.config.cachedItems ?? this.feed?.items ?? []
+    },
+
     displayedItems () {
-      return this.feed?.items.slice(0, this.config.maxItems) ?? []
+      return this.allItems.slice(0, this.displayCount)
+    },
+
+    hasMore (): boolean {
+      return this.displayCount < this.allItems.length
     }
   },
 
@@ -41,7 +55,15 @@ export default defineComponent({
         this.setupRefresh()
       },
       immediate: true
+    },
+
+    loading (val: boolean) {
+      this.$emit('update:loading', val)
     }
+  },
+
+  mounted () {
+    this.computeInitialCount()
   },
 
   beforeUnmount () {
@@ -51,6 +73,23 @@ export default defineComponent({
   },
 
   methods: {
+    computeInitialCount () {
+      const el = this.$refs.scroller as HTMLElement | undefined
+      if (!el) return
+      const visibleHeight = el.clientHeight
+      const fitCount = Math.ceil(visibleHeight / ITEM_HEIGHT_ESTIMATE)
+      this.displayCount = Math.max(fitCount * 2, BATCH_SIZE)
+    },
+
+    onScroll (event: Event) {
+      if (!this.hasMore) return
+      const el = event.target as HTMLElement
+      const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 200
+      if (nearBottom) {
+        this.displayCount += BATCH_SIZE
+      }
+    },
+
     async loadFeed () {
       if (!this.config.feedUrl) return
 
@@ -58,7 +97,15 @@ export default defineComponent({
       this.error = null
 
       try {
-        this.feed = await fetchRssFeed(this.config.feedUrl)
+        const isInitial = !this.config.cachedItems?.length
+        const { data, usedProxy } = await fetchRssFeed(this.config.feedUrl, this.config.useProxy)
+        this.feed = data
+        const cached = mergeItems(this.config.cachedItems ?? [], data.items)
+        const updates: Partial<RssWidgetConfig> = { cachedItems: cached, useProxy: usedProxy }
+        if (isInitial && data.title) {
+          updates.title = data.title
+        }
+        this.$emit('update:config', { ...this.config, ...updates })
       } catch (e) {
         this.error = e instanceof Error ? e.message : 'Failed to fetch feed'
       } finally {
@@ -89,16 +136,16 @@ export default defineComponent({
 </script>
 
 <template>
-  <div class="rss">
-    <div v-if="loading && !feed" class="rss-loading">
-      Loading...
-    </div>
-
-    <div v-else-if="error" class="rss-error">
+  <div ref="scroller" class="rss" @scroll="onScroll">
+    <div v-if="error && !displayedItems.length" class="rss-error">
       {{ error }}
     </div>
 
-    <ul v-else-if="feed" class="rss-list">
+    <div v-else-if="loading && !displayedItems.length" class="rss-loading">
+      Loading...
+    </div>
+
+    <ul v-else-if="displayedItems.length" class="rss-list">
       <li
         v-for="(item, index) in displayedItems"
         :key="index"

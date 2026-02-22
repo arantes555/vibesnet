@@ -21,9 +21,7 @@ export default defineComponent({
   data () {
     return {
       title: this.config.title,
-      feedUrl: this.config.feedUrl,
-      refreshInterval: this.config.refreshInterval,
-      maxItems: this.config.maxItems
+      refreshInterval: this.config.refreshInterval
     }
   },
 
@@ -31,9 +29,7 @@ export default defineComponent({
     config: {
       handler (newConfig: RssWidgetConfig) {
         this.title = newConfig.title
-        this.feedUrl = newConfig.feedUrl
         this.refreshInterval = newConfig.refreshInterval
-        this.maxItems = newConfig.maxItems
       },
       deep: true
     }
@@ -48,9 +44,7 @@ export default defineComponent({
       this.$emit('save', {
         ...this.config,
         title: this.title,
-        feedUrl: this.feedUrl,
-        refreshInterval: this.refreshInterval,
-        maxItems: this.maxItems
+        refreshInterval: this.refreshInterval
       })
       this.close()
     }
@@ -74,19 +68,10 @@ export default defineComponent({
           </label>
 
           <label class="form-label">
-            Feed URL
-            <input v-model="feedUrl" type="url" class="form-input" placeholder="https://example.com/feed.xml">
-          </label>
-
-          <label class="form-label">
             Refresh interval (minutes)
             <input v-model.number="refreshInterval" type="number" min="1" max="60" class="form-input">
           </label>
 
-          <label class="form-label">
-            Max items to display
-            <input v-model.number="maxItems" type="number" min="1" max="50" class="form-input">
-          </label>
         </div>
 
         <footer class="dialog-footer">

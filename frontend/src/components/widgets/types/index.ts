@@ -1,3 +1,5 @@
+import type { RssFeedItem } from '@/services/rss'
+
 export type WidgetType = 'rss' | 'weather' | 'clock' | 'notes' | 'bookmarks'
 
 export interface BaseWidgetConfig {
@@ -10,7 +12,8 @@ export interface RssWidgetConfig extends BaseWidgetConfig {
   type: 'rss'
   feedUrl: string
   refreshInterval: number
-  maxItems: number
+  cachedItems?: RssFeedItem[]
+  useProxy?: boolean
 }
 
 export interface WeatherWidgetConfig extends BaseWidgetConfig {

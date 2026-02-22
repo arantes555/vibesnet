@@ -23,6 +23,7 @@ export default defineComponent({
     <header class="widget-header" :class="{ 'widget-header--draggable': draggable }">
       <h3 class="widget-title">{{ config.title }}</h3>
       <div class="widget-actions">
+        <slot name="header-status" />
         <slot name="menu" />
       </div>
     </header>

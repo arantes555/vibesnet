@@ -42,7 +42,8 @@ export default defineComponent({
   data () {
     return {
       showEditDialog: false,
-      showDeleteConfirm: false
+      showDeleteConfirm: false,
+      childLoading: false
     }
   },
 
@@ -83,6 +84,13 @@ export default defineComponent({
 
     handleDeleteConfirm () {
       this.$emit('remove')
+    },
+
+    refreshChild () {
+      const child = this.$refs.widgetChild as { loadFeed?: () => void } | undefined
+      if (child?.loadFeed) {
+        child.loadFeed()
+      }
     }
   }
 })
@@ -90,14 +98,32 @@ export default defineComponent({
 
 <template>
   <BaseWidget :config="config" :draggable="true">
+    <template #header-status>
+      <button
+        v-if="config.type === 'rss' && !childLoading"
+        class="header-btn"
+        title="Refresh"
+        @click="refreshChild"
+      >
+        &#8635;
+      </button>
+      <span
+        v-else-if="config.type === 'rss' && childLoading"
+        class="header-spinner"
+        title="Loading..."
+      />
+    </template>
+
     <template #menu>
       <WidgetMenu :items="menuItems" @select="handleMenuSelect" />
     </template>
 
     <component
       :is="widgetComponent"
+      ref="widgetChild"
       :config="config"
       @update:config="$emit('update:config', $event)"
+      @update:loading="childLoading = $event"
     />
   </BaseWidget>
 
@@ -131,3 +157,40 @@ export default defineComponent({
     @confirm="handleDeleteConfirm"
   />
 </template>
+
+<style scoped>
+.header-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.875rem;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.header-btn:hover {
+  opacity: 1;
+}
+
+.header-spinner {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
