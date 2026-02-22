@@ -2,6 +2,7 @@
 import { defineComponent } from 'vue'
 import { RouterView } from 'vue-router'
 import AddWidgetDialog from '@/components/dashboard/AddWidgetDialog.vue'
+import { useThemeStore } from '@/stores/theme'
 
 export default defineComponent({
   name: 'App',
@@ -11,9 +12,32 @@ export default defineComponent({
     AddWidgetDialog
   },
 
+  setup () {
+    const theme = useThemeStore()
+    return { theme }
+  },
+
   data () {
     return {
       showAddWidget: false
+    }
+  },
+
+  computed: {
+    themeIcon (): string {
+      switch (this.theme.mode) {
+        case 'light': return '\u2600'
+        case 'dark': return '\u263E'
+        default: return '\u25D1'
+      }
+    },
+
+    themeTitle (): string {
+      switch (this.theme.mode) {
+        case 'light': return 'Theme: Light (click to switch)'
+        case 'dark': return 'Theme: Dark (click to switch)'
+        default: return 'Theme: System (click to switch)'
+      }
     }
   }
 })
@@ -23,6 +47,9 @@ export default defineComponent({
   <header class="app-header">
     <h1 class="app-title">VibesNet</h1>
     <div class="app-actions">
+      <button class="header-btn theme-btn" :title="themeTitle" @click="theme.cycle()">
+        {{ themeIcon }}
+      </button>
       <button class="header-btn" @click="showAddWidget = true">
         + Add Widget
       </button>
@@ -69,5 +96,11 @@ export default defineComponent({
 
 .header-btn:hover {
   background: rgba(255, 255, 255, 0.22);
+}
+
+.theme-btn {
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
 }
 </style>
