@@ -43,7 +43,8 @@ export default defineComponent({
     return {
       showEditDialog: false,
       showDeleteConfirm: false,
-      childLoading: false
+      childLoading: false,
+      unreadCount: 0
     }
   },
 
@@ -91,6 +92,13 @@ export default defineComponent({
       if (child?.loadFeed) {
         child.loadFeed()
       }
+    },
+
+    markAllRead () {
+      const child = this.$refs.widgetChild as { markAllAsRead?: () => void } | undefined
+      if (child?.markAllAsRead) {
+        child.markAllAsRead()
+      }
     }
   }
 })
@@ -99,6 +107,14 @@ export default defineComponent({
 <template>
   <BaseWidget :config="config" :draggable="true">
     <template #header-status>
+      <button
+        v-if="config.type === 'rss' && unreadCount > 0"
+        class="header-btn header-btn--badge"
+        title="Mark all as read"
+        @click="markAllRead"
+      >
+        <span class="unread-badge">{{ unreadCount }}</span>
+      </button>
       <button
         v-if="config.type === 'rss' && !childLoading"
         class="header-btn"
@@ -124,6 +140,7 @@ export default defineComponent({
       :config="config"
       @update:config="$emit('update:config', $event)"
       @update:loading="childLoading = $event"
+      @update:unread-count="unreadCount = $event"
     />
   </BaseWidget>
 
@@ -178,6 +195,21 @@ export default defineComponent({
 
 .header-btn:hover {
   opacity: 1;
+}
+
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .header-spinner {

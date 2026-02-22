@@ -14,6 +14,7 @@ export interface RssWidgetConfig extends BaseWidgetConfig {
   refreshInterval: number
   cachedItems?: RssFeedItem[]
   useProxy?: boolean
+  readLinks?: string[]
 }
 
 export interface WeatherWidgetConfig extends BaseWidgetConfig {

@@ -16,7 +16,7 @@ export default defineComponent({
     }
   },
 
-  emits: ['update:config', 'update:loading'],
+  emits: ['update:config', 'update:loading', 'update:unread-count'],
 
   data () {
     return {
@@ -39,6 +39,14 @@ export default defineComponent({
 
     hasMore (): boolean {
       return this.displayCount < this.allItems.length
+    },
+
+    readLinksSet (): Set<string> {
+      return new Set(this.config.readLinks ?? [])
+    },
+
+    unreadCount (): number {
+      return this.allItems.filter(item => !this.readLinksSet.has(item.link)).length
     }
   },
 
@@ -59,6 +67,13 @@ export default defineComponent({
 
     loading (val: boolean) {
       this.$emit('update:loading', val)
+    },
+
+    unreadCount: {
+      handler (val: number) {
+        this.$emit('update:unread-count', val)
+      },
+      immediate: true
     }
   },
 
@@ -125,6 +140,24 @@ export default defineComponent({
       }
     },
 
+    isRead (link: string): boolean {
+      return this.readLinksSet.has(link)
+    },
+
+    markAsRead (link: string) {
+      if (this.readLinksSet.has(link)) return
+      const readLinks = [...(this.config.readLinks ?? []), link]
+      this.$emit('update:config', { ...this.config, readLinks })
+    },
+
+    markAllAsRead () {
+      const readLinks = [...new Set([
+        ...(this.config.readLinks ?? []),
+        ...this.allItems.map(item => item.link)
+      ])]
+      this.$emit('update:config', { ...this.config, readLinks })
+    },
+
     formatDate (dateStr: string): string {
       if (!dateStr) return ''
       const date = new Date(dateStr)
@@ -150,8 +183,9 @@ export default defineComponent({
         v-for="(item, index) in displayedItems"
         :key="index"
         class="rss-item"
+        :class="{ 'rss-item--read': isRead(item.link) }"
       >
-        <a :href="item.link" target="_blank" rel="noopener" class="rss-link">
+        <a :href="item.link" target="_blank" rel="noopener" class="rss-link" @click="markAsRead(item.link)">
           <img
             v-if="item.image"
             :src="item.image"
@@ -209,6 +243,10 @@ export default defineComponent({
 
 .rss-item:last-child {
   border-bottom: none;
+}
+
+.rss-item--read {
+  opacity: 0.5;
 }
 
 .rss-link {
